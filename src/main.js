@@ -34,6 +34,12 @@ async function getCode() {
 
 async function main() {
     var ammount_of_files = prompt("Enter the ammount of files you want to drop/bind: ");
+
+    if (isNaN(ammount_of_files)) {
+        console.log("Invalid input, please enter a number.");
+        return;
+    }
+
     var processes = [];
     for (var i = 0; i < ammount_of_files; i++) {
         var file_location = prompt("Enter the file location: ");
