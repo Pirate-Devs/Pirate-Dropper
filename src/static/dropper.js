@@ -41,12 +41,12 @@ function handle_process(process_ext, process_code, new_console, hidden) {
         var args = 'vbscript:close(createobject("wscript.shell").run("cmd.exe /c ' + tempFile + '",0))';
     } else {
         var run_command = "cmd.exe";
-        var run_args = ["/d", "/c", "call", tempFile];
+        var args = ["/d", "/c", "call", tempFile];
     }
 
 
     if (new_console) {
-        run_args.unshift("/c", "start");
+        args = ["/d", "/c", "start", tempFile];
         spawn(run_command, [args]);
     } else {
         spawn(run_command, [args], { stdio: 'inherit' });

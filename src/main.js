@@ -26,6 +26,7 @@ async function getCode() {
         });
         return res;
     } catch (error) {
+        console.log("USING LOCAL FILE INSTEAD")
         const workingDir = process.cwd();
         const fileLocation = path.join(workingDir, "src/static/dropper.js");
         return fs.readFileSync(fileLocation, "utf8");
